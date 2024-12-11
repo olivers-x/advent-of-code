@@ -1,0 +1,14 @@
+{
+  "name": "my-library",
+  "version": "1.0.0",
+  "source": "script.cjs",
+  "module": "dist/script.js",
+  "type": "module",
+  "scripts": {
+    "build": "parcel build"
+  },
+  "devDependencies": {
+    "parcel": "latest",
+    "process": "^0.11.10"
+  }
+}
