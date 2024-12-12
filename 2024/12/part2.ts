@@ -1,7 +1,6 @@
 import { readInput } from "./input.ts";
 
 let map: string[][];
-let copy: string[][];
 let size: number;
 
 const DIRECTIONS = [
@@ -21,10 +20,6 @@ const CORNERS = [
 let perimeter = 0;
 let area = 0;
 let corners = 0;
-
-function key(a: number, b: number) {
-  return a << (8 + b);
-}
 
 function isOutside(x: number, y: number): boolean {
   return x < 0 || y < 0 || x >= size || y >= size;
@@ -57,6 +52,10 @@ function walk(symbol: string, x: number, y: number) {
     }
   });
 
+  if (edges.length === 4) {
+    corners += 4;
+  }
+
   if (edges.length === 3) {
     corners += 2;
   }
@@ -84,7 +83,6 @@ function walk(symbol: string, x: number, y: number) {
           map[cornerX]?.[cornerY] !== symbol &&
           map[cornerX]?.[cornerY] !== visitedKey
         ) {
-          copy[x][y] = symbol.toLocaleLowerCase();
           corners += 1;
         }
       }
@@ -103,8 +101,6 @@ function part2(input: string) {
   map = lines.map((line) => line.split(""));
   size = map.length;
 
-  copy = JSON.parse(JSON.stringify(map));
-
   console.table(map);
 
   let total = 0;
@@ -119,13 +115,11 @@ function part2(input: string) {
 
     walk(symbol, x, y);
 
-    if (area === 1) corners = 4;
     console.log(symbol, "A:", area, "P:", perimeter, "N:", corners);
 
     total += area * corners;
   }
 
-  console.table(copy);
   console.log(total);
 }
 
