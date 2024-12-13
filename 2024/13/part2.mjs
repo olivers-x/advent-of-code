@@ -7,7 +7,7 @@ function isWhole(a) {
 
 const regex = /\d+/g;
 
-const math = Mathjs.create(Mathjs.all, { number: "bigint" });
+const math = Mathjs.create(Mathjs.all, { number: "number" });
 
 async function part2(input) {
   const lines = input.split("\n\n");
@@ -19,8 +19,8 @@ async function part2(input) {
       const [b1, b2] = condition[1].match(regex);
       let [c1, c2] = condition[2].match(regex);
 
-      c1 = 10000000000000n + BigInt(c1);
-      c2 = 10000000000000n + BigInt(c2);
+      c1 = 10000000000000 + Number(c1);
+      c2 = 10000000000000 + Number(c2);
 
       // https://en.wikipedia.org/wiki/Cramer%27s_rule
       const detX = math.det([
@@ -38,10 +38,7 @@ async function part2(input) {
         [a2, b2],
       ]);
 
-      if (
-        math.chain(detX).mod(det).done() !== 0 ||
-        math.chain(detY).mod(det).done() !== 0
-      ) {
+      if (detX % det !== 0 || detY % det !== 0) {
         return 0n;
       }
 
