@@ -10,12 +10,11 @@ const regex = /\d+/g;
 const math = Mathjs.create(Mathjs.all, { number: "bigint" });
 
 async function part2(input) {
-  const all = input.split("\n");
-  all.push("");
-  const conditions = all.reshape(all.length / 4, 4);
+  const lines = input.split("\n\n");
 
-  const price = conditions
-    .map((condition) => {
+  const price = lines
+    .map((line) => {
+      const condition = line.split("\n");
       const [a1, a2] = condition[0].match(regex);
       const [b1, b2] = condition[1].match(regex);
       let [aR, bR] = condition[2].match(regex);
