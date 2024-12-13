@@ -1,10 +1,6 @@
 import * as Mathjs from "mathjs";
 import { read, sum } from "../lib.mjs";
 
-function isWithinEpsilon(number, epsilon = 0.001) {
-  return Math.abs(number - Math.round(number)) <= epsilon;
-}
-
 function isWhole(a) {
   return a == Math.round(a);
 }
@@ -27,29 +23,32 @@ async function part2(input) {
       c2 = 10000000000000n + BigInt(c2);
 
       // https://en.wikipedia.org/wiki/Cramer%27s_rule
-      const cm = [
-        [a1, b1],
-        [a2, b2],
-      ];
-
-      const xm = [
+      const detX = math.det([
         [c1, b1],
         [c2, b2],
-      ];
+      ]);
 
-      const ym = [
+      const detY = math.det([
         [a1, c1],
         [a2, c2],
-      ];
+      ]);
 
-      const x = math.chain(math.det(xm)).divide(math.det(cm)).done();
-      const y = math.chain(math.det(ym)).divide(math.det(cm)).done();
+      const det = math.det([
+        [a1, b1],
+        [a2, b2],
+      ]);
 
-      if (isWhole(x) && isWhole(y)) {
-        return BigInt(x) * 3n + BigInt(y);
+      if (
+        math.chain(detX).mod(det).done() !== 0 ||
+        math.chain(detY).mod(det).done() !== 0
+      ) {
+        return 0n;
       }
 
-      return 0n;
+      const x = math.chain(detX).divide(det).done();
+      const y = math.chain(detY).divide(det).done();
+
+      return BigInt(x) * 3n + BigInt(y);
     })
     .reduce(sum);
 
