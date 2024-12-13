@@ -10,13 +10,18 @@ function makeKey(a, b) {
   return (a << 7) + b;
 }
 
+let cacheHit = 0;
+let cacheMiss = 0;
+
 const memoize = (fn) => {
   let cache = {};
   return (...args) => {
     let key = makeKey(args[0], args[1]);
     if (key in cache) {
+      cacheHit++;
       return cache[key];
     } else {
+      cacheMiss++;
       let result = fn(args[0], args[1]);
       cache[key] = result;
       return result;
@@ -54,8 +59,6 @@ const blink = memoize((stone, deepness = 0) => {
 function part1(input) {
   const stones = input.split(" ").map(toInt);
 
-  console.table(stones);
-
   const counts = stones.map((s, i) => {
     console.log("computing stone #", i);
     const nStones = blink(s, 0);
@@ -65,6 +68,8 @@ function part1(input) {
 
   const total = counts.reduce(sum, 0);
 
+  console.log("cache hits", cacheHit);
+  console.log("cache miss", cacheMiss);
   console.log("blinks", N_BLINKS, "n of stones", total);
 }
 
