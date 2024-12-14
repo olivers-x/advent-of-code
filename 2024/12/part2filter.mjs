@@ -50,10 +50,11 @@ async function part2(input) {
         [-1, 1],
         [1, -1],
       ]);
+      const nCorners = corners.flat().map(Math.abs).reduce(sum);
+
       const horizontal = convolution(m1, [[1, -1]]).filter(Boolean).length;
       const vertical = convolution(m1, [[1], [-1]]).filter(Boolean).length;
       const area = flattened.filter((s) => s === symbol).length;
-      const nCorners = corners.flat().map(Math.abs).reduce(sum);
       const perimeter = horizontal + vertical;
 
       console.log(symbol, "a=", area, "s=", nCorners);

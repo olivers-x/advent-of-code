@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "mathjs": "^14.0.1",
+    "ml-matrix-convolution": "^1.0.0"
+  }
+}
