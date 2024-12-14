@@ -1,19 +1,23 @@
-import { read, toInt, sum } from "../lib.mjs";
+import { read, toInt, sum, unique } from "../lib.mjs";
 import { multiply, add } from "mathjs";
+import { direct as convolution } from "ml-matrix-convolution";
 
 const WIDE = 101;
 const TALL = 103;
 
+const gtz = (i) => i > 0;
+const gt1 = (i) => i > 1;
+
 const SECONDS = process.argv[process.argv.length - 2];
 
 function plotPoints(points) {
-  const grid = Array.from({ length: TALL }, () => Array(WIDE).fill(" "));
+  const grid = Array.from({ length: TALL }, () => Array(WIDE).fill(0));
 
   points.forEach(([x, y]) => {
-    grid[x][y] = "X";
+    grid[x][y] = 1;
   });
 
-  grid.forEach((line) => console.log(line.join("")));
+  // grid.forEach((line) => console.log(line.join("")));
 
   return grid;
 }
@@ -46,16 +50,35 @@ function second(lines, nSeconds) {
   });
 }
 
+const DIAGONAL = [
+  [-2, -1, -1, 1],
+  [-1, -1, 1, -1],
+  [-1, 1, -1, -1],
+  [1, -1, -1, -2],
+];
+
 function part2(input) {
   const lines = input.split("\n").map(parseLine);
 
-  for (let i = 1; i <= SECONDS; i++) {
-    const after = second(lines, i);
-    const y32count = after.filter(([x, y]) => y === 32).length;
+  for (let i = 1; ; i++) {
+    const points = second(lines, i);
+    const matrix = plotPoints(points);
+
+    const y32count = points
+      .filter(([x, y]) => y === 32)
+      .map(([x, y]) => x)
+      .filter(unique).length;
 
     if (y32count > 30) {
-      console.log("points after ", i);
-      plotPoints(after);
+      const hasDiagonal = convolution(matrix, DIAGONAL)
+        .filter(gt1)
+        .every((i) => i === 2);
+
+      if (hasDiagonal) {
+        matrix.forEach((line) => console.log(line.join("")));
+        console.log(i, hasDiagonal);
+        return;
+      }
     }
   }
 }
