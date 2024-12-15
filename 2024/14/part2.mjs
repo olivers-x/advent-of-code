@@ -65,8 +65,8 @@ function part2(input) {
     const matrix = plotPoints(points);
 
     const y32count = points
-      .filter(([x, y]) => y === 32)
-      .map(([x, y]) => x)
+      .filter(([, y]) => y === 32)
+      .map(([x]) => x)
       .filter(unique).length;
 
     if (y32count > 30) {
