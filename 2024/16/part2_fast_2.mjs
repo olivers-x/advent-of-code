@@ -95,14 +95,25 @@ function mazeToUndirectedGraph(maze) {
 function mazeToDirectedGraph(maze) {
   findSE(maze);
 
-  const startNode = key(start[0], start[1]);
-  const branchingPoints = {};
+  const startNode = getNodeId(0, start[0], start[1]);
+  const endNode0 = getNodeId(0, end[0], end[1]);
+  const endNode1 = getNodeId(1, end[0], end[1]);
+  const endNode2 = getNodeId(2, end[0], end[1]);
+  const endNode3 = getNodeId(3, end[0], end[1]);
 
   const graph = {};
+  const branchingPoints = {
+    [startNode]: true,
+    [endNode0]: true,
+    [endNode1]: true,
+    [endNode2]: true,
+    [endNode3]: true,
+  };
+
   const visited = {};
 
   function walk(x, y, currentDir) {
-    const nodeId = key(x, y);
+    const nodeId = getNodeId(currentDir, x, y);
 
     // if (visited.has(nodeId)) return;
 
@@ -128,17 +139,21 @@ function mazeToDirectedGraph(maze) {
       }
     }
 
+    if (validDirections.length > 1) {
+      branchingPoints[nodeId] = true;
+    }
+
     validDirections.forEach((dir) => {
       const [dx, dy] = DIRECTIONS[dir];
 
       const nx = x + dx;
       const ny = y + dy;
 
-      const neighborId = key(nx, ny);
+      const neighborId = getNodeId(dir, nx, ny);
 
       const weight = dir === currentDir ? 1 : 1001;
 
-      graph[nodeId][neighborId] = { distance: 1, direction: dir };
+      graph[nodeId][neighborId] = weight;
 
       if (visited[nodeId] < 4) {
         walk(nx, ny, dir);
@@ -284,60 +299,46 @@ function dijkstra(graph, start) {
 }
 
 function directional_dijkstra(graph, start, startDir, end) {
-  const _distances = {};
-  const visited = {};
-  const previous = {};
-  const splitPoints = [];
+  const distances = {};
+  const visited = new Set(); // Keep track of visited nodes with direction
+  const previous = {}; // Store predecessors for backtracking
   const nodes = Object.keys(graph);
-  let cycles = 0;
 
+  // Initialize distances to Infinity
   for (let node of nodes) {
-    _distances[node] = [Infinity, Infinity, Infinity, Infinity];
+    distances[node] = [Infinity, Infinity, Infinity, Infinity];
+    previous[node] = [null, null, null, null]; // Track previous nodes per direction
   }
 
-  _distances[start] = [0, Infinity, Infinity, Infinity];
+  // Distance to the start node is 0 for its start direction
+  distances[start][startDir] = 0;
 
-  const pq = [
-    {
-      direction: startDir,
-      node: start,
-      weight: 0,
-    },
-  ];
+  // Priority queue to hold {node, direction, weight}
+  const pq = [{ node: start, direction: startDir, weight: 0 }];
 
   const getNewDistance = (from, to, dir) => {
-    let { distance, direction } = graph[from][to];
-
+    const { distance, direction } = graph[from][to];
     if (dir === direction) return { distance, direction };
 
     if (Math.abs(dir - direction) === 2) {
-      // console.log("opposite direction");
-      return { distance: distance + 2000, direction };
+      return { distance: distance + 2000, direction }; // Opposite turn cost
     }
-
-    return { distance: distance + 1000, direction };
+    return { distance: distance + 1000, direction }; // Regular turn cost
   };
 
-  const getCurrentDistance = (to, dir) => _distances[to][dir];
+  while (pq.length > 0) {
+    // Sort priority queue by weight
+    pq.sort((a, b) => a.weight - b.weight);
+    const { node, direction: d, weight } = pq.shift();
 
-  const getNeighborDistance = (to, dir) => {
-    return _distances[to][dir];
-  };
+    const visitedKey = `${node}-${d}`;
+    if (visited.has(visitedKey)) continue; // Skip already visited
+    visited.add(visitedKey);
 
-  const compare = (a, b) => a.weight - b.weight;
+    // If we reached the end node, continue to explore all paths
+    if (node === end) continue;
 
-  while (pq.length) {
-    const state = pq.shift();
-    pq.sort(compare);
-
-    let { node, direction: d } = state;
-
-    if (node === end) break;
-
-    visited[node] ??= [];
-    if (visited[node][d]) continue;
-    visited[node][d] = true;
-
+    // Relax neighbors
     for (let neighbor in graph[node]) {
       const { distance: newDistance, direction: newDirection } = getNewDistance(
         node,
@@ -345,57 +346,70 @@ function directional_dijkstra(graph, start, startDir, end) {
         d
       );
 
-      const currentDistance = getCurrentDistance(node, d);
-      const neighborDistance = getNeighborDistance(neighbor, newDirection);
-      const totalNewDistance = currentDistance + newDistance;
+      const totalNewDistance = distances[node][d] + newDistance;
 
-      if (totalNewDistance < neighborDistance) {
-        _distances[neighbor][newDirection] = totalNewDistance;
+      if (totalNewDistance < distances[neighbor][newDirection]) {
+        distances[neighbor][newDirection] = totalNewDistance;
+        previous[neighbor][newDirection] = node;
 
-        previous[node] = [];
-      } else if (totalNewDistance === neighborDistance) {
+        pq.push({
+          node: neighbor,
+          direction: newDirection,
+          weight: totalNewDistance,
+        });
       }
-
-      const direction = graph[node][neighbor].direction;
-
-      if (Math.abs(direction - d) === 2) continue;
-
-      const schedule = { node: neighbor, direction, weight: currentDistance };
-      pq.unshift(schedule);
     }
   }
 
-  return { distances: _distances, previous, splitPoints };
+  return { distances, previous };
 }
 
-function reconstructAllPaths(previous, start, end) {
+// Function to reconstruct all paths using backtracking
+function reconstructShortestPaths(previous, distances, start, end) {
   const paths = [];
-  const stack = [[end, []]];
+  const stack = [[end, [], 0]]; // Each entry: [currentNode, pathSoFar, currentDistance]
+  const visited = new Set();
+
+  const shortestDistance = Math.min(...distances[end]); // The shortest distance to the end node
 
   while (stack.length > 0) {
-    const [currentNode, path] = stack.pop();
+    const [currentNode, path, currentDist] = stack.pop();
     const newPath = [currentNode, ...path];
+    const stateKey = `${currentNode}-${currentDist}`;
+
+    if (visited.has(stateKey)) continue;
+    visited.add(stateKey);
 
     if (currentNode === start) {
-      paths.push(newPath);
+      // Check if this path's total distance matches the shortest distance
+      if (currentDist === shortestDistance) {
+        paths.push(newPath);
+      }
       continue;
     }
 
-    if (previous[currentNode]) {
-      for (const prevNode of previous[currentNode]) {
-        stack.push([prevNode, newPath]);
+    // Iterate over all directions and backtrack if valid
+    for (let dir = 0; dir < 4; dir++) {
+      const prevNode = previous[currentNode]?.[dir];
+      if (prevNode !== null && prevNode !== undefined) {
+        const prevDist = distances[prevNode][dir];
+        const edgeDistance = distances[currentNode][dir] - prevDist;
+
+        // Continue backtracking only if the distance matches
+        if (currentDist + edgeDistance === shortestDistance) {
+          stack.push([prevNode, newPath, currentDist + edgeDistance]);
+        }
       }
     }
   }
 
   return paths;
 }
+
 function part2_fast(map) {
   const t0 = performance.now();
 
-  // const { graph: undirected, branchingPoints } = mazeToUndirectedGraph(map);
-
-  const { graph } = mazeToDirectedGraph(map);
+  const { graph, branchingPoints } = mazeToUndirectedGraph(map);
   console.log("START @", start);
   console.log("END @", end);
 
@@ -440,6 +454,19 @@ function part2_fast(map) {
   const t4 = performance.now();
 
   console.log("previous", previous);
+
+  const allPaths = reconstructShortestPaths(
+    previous,
+    distances,
+    startKey,
+    endKey
+  );
+  console.log("All Possible Paths from Start to End:");
+  // console.log(allPaths);
+
+  const merged = allPaths.flat().filter(unique);
+  console.log(merged.length);
+  // allPaths.forEach((path) => console.log(path.reverse().join(" -> ")));
 
   const minDists = Object.keys(distances).filter((key) => {
     const min = Math.min(...distances[key]);

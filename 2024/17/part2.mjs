@@ -1,11 +1,11 @@
 import { read } from "../lib.mjs";
 
-function part1(input) {
-  const [registers, program] = input.split("\n\n");
+function checkWithA(registerA, program) {
+  let A = registerA;
+  let B = 0;
+  let C = 0;
 
-  let [A, B, C] = registers
-    .split("\n")
-    .map((register) => Number(register.split(" ")[2]));
+  const output = [];
 
   const queue = program.split(" ")[1].split(",").map(Number);
 
@@ -32,7 +32,7 @@ function part1(input) {
   };
 
   const bst = (operand) => {
-    B = combo(operand) % 8;
+    B = combo(operand) & 7;
   };
 
   const jnz = (operand) => {
@@ -56,7 +56,7 @@ function part1(input) {
   };
 
   const out = (operand) => {
-    process.stdout.write("," + (combo(operand) % 8));
+    output.push(combo(operand) & 7);
   };
 
   const INSTRUCTIONS = {
@@ -79,8 +79,24 @@ function part1(input) {
     instructionPointer += 2;
   }
 
-  console.log();
-  console.log("A:", A, "B:", B, "C:", C);
+  return output.join(",");
 }
 
-part1(read());
+function main() {
+  const input = read();
+  const [registers, program] = input.split("\n\n");
+
+  let [A] = registers
+    .split("\n")
+    .map((register) => Number(register.split(" ")[2]));
+
+  const wanted = Number(program.split(" ")[1].split(",").join(""));
+
+  console.log(wanted);
+
+  const r = checkWithA(2415751603465530 << 3, program);
+
+  console.log(r);
+}
+
+main();

@@ -232,6 +232,8 @@ function part2(map) {
   console.log("dijkstra", t3 - t2);
 
   const visited = { [end]: true, [start]: true };
+  let total = 0;
+  const key = (x, y) => x + "," + y;
 
   function countPrevious(node) {
     const nodes = previous[node];
@@ -241,19 +243,19 @@ function part2(map) {
     if (nodes.length === 1) {
       const [node] = nodes;
       const [x, y] = nodeIdToXY(node);
-      visited[[x, y]] = true;
+      visited[key(x, y)] = true;
       countPrevious(node);
       map[x][y] = "x";
     } else {
       nodes.forEach(countPrevious);
+      const [x, y] = nodeIdToXY(node);
+      visited[key(x, y)] = true;
     }
   }
 
   countPrevious(endNode);
-  // visited[start] = true;
 
-  console.log(visited);
-  console.log(Object.keys(visited).length);
+  console.log(Object.keys(visited).length + total);
 
   console.table(map);
 
@@ -262,7 +264,7 @@ function part2(map) {
     distances[getNodeId(1, end[0], end[1])],
     distances[getNodeId(2, end[0], end[1])],
     distances[getNodeId(3, end[0], end[1])],
-  ].sort((a, b) => a - b);
+  ]; // .sort((a, b) => a - b);
 
   console.log(prices);
 
