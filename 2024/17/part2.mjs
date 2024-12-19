@@ -1,102 +1,68 @@
 import { read } from "../lib.mjs";
 
-function checkWithA(registerA, program) {
-  let A = registerA;
-  let B = 0;
-  let C = 0;
-
-  const output = [];
-
-  const queue = program.split(" ")[1].split(",").map(Number);
-
-  let instructionPointer = 0;
-
-  const combo = (operand) => {
-    if (operand === 0) return 0;
-    if (operand === 1) return 1;
-    if (operand === 2) return 2;
-    if (operand === 3) return 3;
-    if (operand === 4) return A;
-    if (operand === 5) return B;
-    if (operand === 6) return C;
-    if (operand === 7) throw new Error("7");
-  };
-
-  const adv = (operand) => {
-    const denominator = 2 ** combo(operand);
-    A = Math.floor(A / denominator);
-  };
-
-  const bxl = (operand) => {
-    B ^= operand;
-  };
-
-  const bst = (operand) => {
-    B = combo(operand) & 7;
-  };
-
-  const jnz = (operand) => {
-    if (A === 0) return;
-
-    instructionPointer = operand - 2;
-  };
-
-  const bxc = () => {
-    B ^= C;
-  };
-
-  const bdv = (operand) => {
-    const denominator = 2 ** combo(operand);
-    B = Math.floor(A / denominator);
-  };
-
-  const cdv = (operand) => {
-    const denominator = 2 ** combo(operand);
-    C = Math.floor(A / denominator);
-  };
-
-  const out = (operand) => {
-    output.push(combo(operand) & 7);
-  };
-
-  const INSTRUCTIONS = {
-    0: adv,
-    1: bxl,
-    2: bst,
-    3: jnz,
-    4: bxc,
-    5: out,
-    6: bdv,
-    7: cdv,
-  };
-
-  while (instructionPointer < queue.length) {
-    const opcode = queue[instructionPointer];
-    const operand = queue[instructionPointer + 1];
-
-    INSTRUCTIONS[opcode]?.(operand);
-
-    instructionPointer += 2;
-  }
-
-  return output.join(",");
-}
-
 function main() {
   const input = read();
-  const [registers, program] = input.split("\n\n");
+  const [, program] = input.split("\n\n");
 
-  let [A] = registers
-    .split("\n")
-    .map((register) => Number(register.split(" ")[2]));
+  let wanted = program.split(" ")[1];
 
-  const wanted = Number(program.split(" ")[1].split(",").join(""));
-
+  console.log(compute(51064159n));
+  console.log(compute(136904920099226n));
   console.log(wanted);
 
-  const r = checkWithA(2415751603465530 << 3, program);
+  let res = 0n;
+  for (let len = wanted.length - 1; len >= 0; len -= 2) {
+    console.log(res);
+    res = res << 3n;
+    const currTarget = "," + wanted.slice(len);
+    console.log(currTarget);
+    while (true) {
+      const result = compute(res);
+      if (result === currTarget) break;
+      res++;
+    }
+  }
 
-  console.log(r);
+  console.log(res);
+
+  /**
+   * 101635n ->                 4,6,5,5,3,0  11000110100000011
+   * 813080n ->               3,4,6,5,5,3,0  11000110100000011000
+   * 416300695n ->      1,6,0,3,4,6,5,5,3,0  11000110100000011111010010111
+   * 4178006594n ->   5,1,6,0,3,4,6,5,5,3,0  11111001000001110101001001000010
+   */
 }
 
 main();
+
+/// 2,4 1,5 7,5 1,6 0,3 4,6 5,5 3,0
+/*
+    bst 4 : B = A & 7;
+    bxl 5 : B ^= 5;
+    cdv 5 : C = A >> B;
+    bxl 6 : B ^= 6;
+    adv 3 : A = A >> 3;
+    bxc 6 : B ^= C;
+    out 5 : process.stdout.write("," + (B & 7));
+    jnz 0 : if A !== 0 jump to 0
+*/
+
+function compute(a) {
+  let A = a;
+  let B = 0n;
+  let C = 0n;
+
+  let out = "";
+
+  while (true) {
+    B = A & 7n;
+    B ^= 5n;
+    C = A >> B;
+    B ^= C ^ 6n;
+    A = A >> 3n;
+    out += "," + (B & 7n);
+    if (A == 0) break;
+  }
+
+  return out;
+}
