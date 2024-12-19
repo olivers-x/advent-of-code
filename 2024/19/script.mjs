@@ -1,13 +1,10 @@
-import { read } from "../lib.mjs";
+import { read, sum } from "../lib.mjs";
 
 function main(input) {
   let [patterns, designs] = input.split("\n\n");
 
-  patterns = patterns.split(", ").sort((a, b) => b.length - a.length);
+  patterns = patterns.split(", ");
   designs = designs.split("\n");
-
-  console.log("removed", removed);
-  console.log("patterns", patterns);
 
   function countPatterns(target, patterns) {
     const patternsSet = new Set(patterns);
@@ -36,15 +33,10 @@ function main(input) {
     return canConstruct(target);
   }
 
-  let total = 0;
-  for (let design of designs) {
-    const result = countPatterns(design, patterns);
+  const possible = designs.map((design) => countPatterns(design, patterns));
 
-    console.log("checking", design, result);
-    total += result;
-  }
-
-  console.log("total", total);
+  console.log("part1", possible.filter(Boolean).length);
+  console.log("part2", possible.reduce(sum));
 }
 
 main(read());
