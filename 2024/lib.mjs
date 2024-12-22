@@ -12,7 +12,7 @@ export function unique(value, index, array) {
 
 export function read() {
   const fileName = process.argv[process.argv.length - 1];
-  return readFileSync(fileName, { encoding: "utf-8", flag: "r" });
+  return readFileSync(fileName, { encoding: "utf-8", flag: "r" }).trimEnd();
 }
 
 // Array.prototype.reshape = function (rows, cols) {
