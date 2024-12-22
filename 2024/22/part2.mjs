@@ -1,13 +1,16 @@
-import { read, sum } from "../lib.mjs";
+import { readFileSync } from "fs";
 
-// 10 -> 0b1010
-// const key = (a, b, c, d) => a + b * 16 + c * 256 + d * 4096;
-const key = (a, b, c, d) => a + "," + b + "," + c + "," + d;
-// const key = (a, b, c, d) => a + b * 16 + c * 256 + d * 4096;
+function read() {
+  const [fileName] = process.argv.slice(-1);
+  return readFileSync(fileName, { encoding: "utf-8", flag: "r" }).trimEnd();
+}
 
-function process(n) {
+const key = (d, c, b, a) =>
+  (a + 9) * 19 ** 3 + (b + 9) * 19 ** 2 + (c + 9) * 19 + (d + 9);
+
+function transformNumber(n) {
   let r1 = ((n << 6) ^ n) & 16777215;
-  let r2 = (r1 >> 5) ^ r1; // & 16777215;
+  let r2 = (r1 >> 5) ^ r1;
   let r3 = ((r2 << 11) ^ r2) & 16777215;
 
   return r3;
@@ -16,12 +19,12 @@ function process(n) {
 function part2(input) {
   const lines = input.split("\n").map(Number);
 
-  const prices = {};
-
   let max = 0;
 
-  lines.forEach((line) => {
-    let visited = {};
+  const prices = new Uint32Array(19 ** 4);
+
+  for (let line of lines) {
+    const visited = new Uint8Array(19 ** 4);
     let r = line;
     let p0, p1, p2, p3, price;
     let dp0, dp1, dp2, dp3;
@@ -33,7 +36,7 @@ function part2(input) {
       p3 = price;
       price = r % 10;
 
-      r = process(r);
+      r = transformNumber(r);
 
       if (i > 3) {
         dp0 = p1 - p0;
@@ -44,17 +47,18 @@ function part2(input) {
         const k = key(dp0, dp1, dp2, dp3);
 
         if (!visited[k]) {
-          prices[k] ??= 0;
-          prices[k] += price;
-          visited[k] = true;
+          const priceAtK = prices[k] ?? 0;
+          const newPrice = priceAtK + price;
+          prices[k] = newPrice;
+          visited[k] = 1;
 
-          if (prices[k] > max) {
-            max = prices[k];
+          if (newPrice > max) {
+            max = newPrice;
           }
         }
       }
     }
-  });
+  }
 
   console.log(max);
 }
