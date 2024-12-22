@@ -18,13 +18,15 @@ function transformNumber(n) {
 
 function part2(input) {
   const lines = input.split("\n").map(Number);
+  const nLines = lines.length;
 
   let max = 0;
 
   const prices = new Uint32Array(19 ** 4);
 
-  for (let line of lines) {
-    const visited = new Uint8Array(19 ** 4);
+  for (let l = 0; l < nLines; l++) {
+    const line = lines[l];
+    const visited = new Uint8ClampedArray(19 ** 4);
     let r = line;
     let p0, p1, p2, p3, price;
     let dp0, dp1, dp2, dp3;
