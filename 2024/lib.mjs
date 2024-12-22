@@ -38,11 +38,11 @@ export function read() {
 //   return this;
 // };
 
-// Array.prototype.group = function (callback) {
-//   return this.reduce((acc = {}, ...args) => {
-//     const key = callback(...args);
-//     acc[key] ??= [];
-//     acc[key].push(args[0]);
-//     return acc;
-//   }, {});
-// };
+Array.prototype.group = function (callback) {
+  return this.reduce((acc = {}, ...args) => {
+    const key = callback(...args);
+    acc[key] ??= [];
+    acc[key].push(args[0]);
+    return acc;
+  }, {});
+};
