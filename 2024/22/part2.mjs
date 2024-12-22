@@ -29,7 +29,7 @@ function part2(input) {
     let p0, p1, p2, p3, price;
     let dp0, dp1, dp2, dp3;
 
-    for (let i = 0; i < 2000; i++) {
+    for (let i = 0; i < 2001; i++) {
       p0 = p1;
       p1 = p2;
       p2 = p3;

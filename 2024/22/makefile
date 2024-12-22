@@ -18,6 +18,10 @@ $(TARGET): part2.c
 clean:
 	rm -f $(TARGET)
 
-# Rule to run the program
+# Rule to run the program with an argument passed to it
 run: $(TARGET)
-	./$(TARGET)
+	@if [ -z "$(INPUT)" ]; then \
+		echo "Error: Please provide an argument, e.g., make run INPUT=nameoffile.txt"; \
+	else \
+		./$(TARGET) $(INPUT); \
+	fi

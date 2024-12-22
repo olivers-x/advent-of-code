@@ -29,7 +29,7 @@ void part2(char *input) {
         int16_t p0 = 0, p1 = 0, p2 = 0, p3 = 0, price = 0;
         int16_t dp0, dp1, dp2, dp3;
 
-        for (int i = 0; i < 2000; i++) {
+        for (int i = 0; i < 2001; i++) {
             p0 = p1;
             p1 = p2;
             p2 = p3;
