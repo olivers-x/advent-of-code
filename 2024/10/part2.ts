@@ -25,7 +25,6 @@ function findTrailheads(map: Map) {
 let score = 0;
 function startWalk(position: Position) {
   walk(position, 0);
-  console.log("score", score);
 }
 
 function walk(position: Position, height: number) {
@@ -48,10 +47,10 @@ function part2(input: string) {
   map = toMap(input);
   mapSize = map.length;
 
-  console.table(map);
-
   const trailheads = findTrailheads(map);
   trailheads.forEach(startWalk);
+
+  console.log("score", score);
 }
 
 if (import.meta.main) {

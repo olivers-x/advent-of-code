@@ -44,7 +44,6 @@ function startWalk(position: Position) {
   // score = 0;
 
   walk(position, 0);
-  console.log("score", score);
 
   resetMap();
 }
@@ -71,10 +70,10 @@ function part1(input: string) {
   mapSize = map.length;
   ends = findEnds(map);
 
-  console.table(map);
-
   const trailheads = findTrailheads(map);
   trailheads.forEach(startWalk);
+
+  console.log("score", score);
 }
 
 if (import.meta.main) {
