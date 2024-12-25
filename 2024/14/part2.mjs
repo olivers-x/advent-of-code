@@ -5,10 +5,7 @@ import { direct as convolution } from "ml-matrix-convolution";
 const WIDE = 101;
 const TALL = 103;
 
-const gtz = (i) => i > 0;
 const gt1 = (i) => i > 1;
-
-const SECONDS = process.argv[process.argv.length - 2];
 
 function plotPoints(points) {
   const grid = Array.from({ length: TALL }, () => Array(WIDE).fill(0));
@@ -16,8 +13,6 @@ function plotPoints(points) {
   points.forEach(([x, y]) => {
     grid[x][y] = 1;
   });
-
-  // grid.forEach((line) => console.log(line.join("")));
 
   return grid;
 }
@@ -76,7 +71,6 @@ function part2(input) {
 
       if (hasDiagonal) {
         matrix.forEach((line) => console.log(line.join("")));
-        console.log(i, hasDiagonal);
         return;
       }
     }

@@ -12,8 +12,6 @@ function plotPoints(points) {
   points.forEach(([x, y]) => {
     grid[x][y] = "x";
   });
-
-  console.table(grid);
 }
 
 const regex = /p=(-?\d+),(-?\d+)\s+v=(-?\d+),(-?\d+)/;
@@ -45,7 +43,6 @@ function toQuadrant([x, y]) {
 function part1(input) {
   const lines = input.split("\n").map(parseLine);
 
-  console.table(lines);
   const starts = lines.map(({ p }) => p);
   plotPoints(starts);
 
@@ -67,12 +64,7 @@ function part1(input) {
     })
     .filter(isNotMiddle);
 
-  console.log("points after ", SECONDS);
   plotPoints(afterSeconds);
-  console.table(afterSeconds);
-
-  const asQuadrants = afterSeconds.map(toQuadrant);
-  console.table(asQuadrants);
 
   const r = Object.values(afterSeconds.group(toQuadrant));
   const total = r.map((points) => points.length).reduce((a, b) => a * b);
