@@ -26,9 +26,6 @@ function part1(input) {
 
   wires.forEach(populateWireMap);
 
-  //   console.log(wireMap);
-  //   console.log(gates);
-
   const queue = [];
 
   for (let gate of gates) {

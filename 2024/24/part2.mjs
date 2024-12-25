@@ -3,19 +3,21 @@ import { read } from "../lib.mjs";
 function part2(input) {
   let [, gates] = input.split("\n\n");
   gates = gates.split("\n");
-  let swapped = [];
+  gates = gates.map((gate) => {
+    const [a, operator, b, , c] = gate.split(" ");
+    return { a, operator, b, c };
+  });
 
-  function findGate(a, b, operator) {
-    return gates
-      .find((gate) => {
-        return (
-          gate.startsWith(`${a} ${operator} ${b}`) ||
-          gate.startsWith(`${b} ${operator} ${a}`)
-        );
-      })
-      ?.split(" -> ")
-      .pop();
+  function findC(a, b, operator) {
+    return gates.find(
+      (gate) =>
+        [a, b].includes(gate.a) &&
+        [a, b].includes(gate.b) &&
+        gate.operator === operator
+    )?.c;
   }
+
+  let swapped = [];
 
   function swap() {
     let c0;
@@ -28,18 +30,18 @@ function part2(input) {
       // c0 AND m1 => r1
       // c0 XOR m1 -> z1
       // r1 OR  n1 -> c1
-      m1 = findGate(`x${n}`, `y${n}`, "XOR");
-      n1 = findGate(`x${n}`, `y${n}`, "AND");
+      m1 = findC(`x${n}`, `y${n}`, "XOR");
+      n1 = findC(`x${n}`, `y${n}`, "AND");
 
       if (c0) {
-        r1 = findGate(c0, m1, "AND");
+        r1 = findC(c0, m1, "AND");
         if (!r1) {
           [n1, m1] = [m1, n1];
           swapped.push(m1, n1);
-          r1 = findGate(c0, m1, "AND");
+          r1 = findC(c0, m1, "AND");
         }
 
-        z1 = findGate(c0, m1, "XOR");
+        z1 = findC(c0, m1, "XOR");
 
         if (m1?.startsWith("z")) {
           [m1, z1] = [z1, m1];
@@ -56,7 +58,7 @@ function part2(input) {
           swapped.push(r1, z1);
         }
 
-        c1 = findGate(r1, n1, "OR");
+        c1 = findC(r1, n1, "OR");
       }
 
       if (c1?.startsWith("z") && c1 !== "z45") {
