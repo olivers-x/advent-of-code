@@ -22,10 +22,6 @@ const ARROW_PAD = {
   ">": { x: 1, y: 2 },
 };
 
-function doorPadToXy(char) {
-  return DOOR_PAD[char];
-}
-
 function xyToPathDoor(p1, p2) {
   const { x: x1, y: y1 } = p1;
   const { x: x2, y: y2 } = p2;
@@ -36,21 +32,17 @@ function xyToPathDoor(p1, p2) {
   const rx = xSymbol.repeat(Math.abs(x1 - x2));
   const ry = ySymbol.repeat(Math.abs(y1 - y2));
 
+  if (ySymbol === "<") {
+    return ry + rx;
+  }
+
+  if (xSymbol === "v") {
+    return rx + ry;
+  }
+
   const r = ry + rx;
 
-  lastMoveDoor = r.slice(-1);
-
   return r;
-}
-
-function xyToPathArrow(p1, p2) {
-  const { x: x1, y: y1 } = p1;
-  const { x: x2, y: y2 } = p2;
-
-  const ySymbol = y1 < y2 ? ">" : "<";
-  const xSymbol = x1 < x2 ? "v" : "^";
-
-  return ySymbol.repeat(Math.abs(y1 - y2)) + xSymbol.repeat(Math.abs(x1 - x2));
 }
 
 function charToPathDoors(char1, char2) {
@@ -61,7 +53,7 @@ function charToPathDoors(char1, char2) {
   if (char1 === "4" && char2 === "A") return ">>vv";
   if (char1 === "1" && char2 === "A") return ">>v";
   if (char1 === "0" && char2 === "1") return "^<";
-  if (char1 === "0" && char2 === "4") return "^<^";
+  if (char1 === "0" && char2 === "4") return "^^<";
   if (char1 === "0" && char2 === "7") return "^^^<";
   if (char1 === "A" && char2 === "1") return "^<<";
   if (char1 === "A" && char2 === "4") return "^^<<";
@@ -76,12 +68,10 @@ function charToPathArrows(char1, char2) {
   if (char1 === "<" && char2 === "^") return ">^";
   if (char1 === "<" && char2 === "A") return ">>^";
 
-  return xyToPathArrow(ARROW_PAD[char1], ARROW_PAD[char2]);
+  return xyToPathDoor(ARROW_PAD[char1], ARROW_PAD[char2]);
 }
 
-function getDoorPadSequence(line) {
-  let doorCode = ("A" + line).split("");
-
+function getDoorPadSequence(doorCode) {
   let sequence = "";
 
   for (let i = 1; i < doorCode.length; i++) {
@@ -109,23 +99,10 @@ function getArrowPadSequence(line) {
   return sequence;
 }
 
-function getSecondArrowPadSequence(line) {
+function processLine(line) {
   let doorCode = ("A" + line).split("");
 
-  let sequence = "";
-
-  for (let i = 1; i < doorCode.length; i++) {
-    const prev = doorCode[i - 1];
-    const cur = doorCode[i];
-
-    sequence += xyToPathArrow(ARROW_PAD[prev], ARROW_PAD[cur]) + "A";
-  }
-
-  return sequence;
-}
-
-function processLine(line) {
-  const doorPadSequence = getDoorPadSequence(line, doorPadToXy);
+  const doorPadSequence = getDoorPadSequence(doorCode);
 
   console.log(line + ":DP: " + doorPadSequence);
 
@@ -133,11 +110,11 @@ function processLine(line) {
 
   console.log(line + ":A1: " + arrowPadSequence1);
 
-  const arrowPadSequence2 = getSecondArrowPadSequence(arrowPadSequence1);
+  const arrowPadSequence2 = getArrowPadSequence(arrowPadSequence1);
 
   console.log(line + ":A2: " + arrowPadSequence2);
   const c1 = arrowPadSequence2.length;
-  const c2 = parseInt(line.substring(0, 3), 10);
+  const c2 = parseInt(line.substring(0, 3), 10) || 1;
 
   console.log(line + ":C: ", c1, c2);
 
@@ -147,6 +124,8 @@ function processLine(line) {
 function part1(input) {
   const lines = input.split("\n");
 
+  console.assert(processLine("A2") === 22, "A2");
+  console.assert(processLine("2A") === 38 * 2, "2A");
   console.assert(processLine("029A") === 1972, "029A");
   console.assert(processLine("980A") === 58800, "980A");
   console.assert(processLine("179A") === 12172, "179A");
