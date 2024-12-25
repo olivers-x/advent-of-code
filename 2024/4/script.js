@@ -1,8 +1,6 @@
 const fs = require("fs");
 const readline = require("readline");
 
-const sum = (a, b) => a + b;
-
 async function readFileLineByLine(filePath) {
   const lines = [];
 
@@ -32,10 +30,10 @@ function findSubMatrix(matrix, subMatrix) {
 
   const result = [];
 
-  // Helper function to check if the sub-matrix matches
   function isMatch(startRow, startCol) {
     for (let i = 0; i < subRows; i++) {
       for (let j = 0; j < subCols; j++) {
+        if (subMatrix[i][j] === ".") continue;
         // If out of bounds or not a match
         if (
           startRow + i >= rows ||
@@ -86,28 +84,55 @@ const PATTERN4 = [
   ["M", ".", "M"],
 ];
 
+const XMAS_PATTERN5 = [
+  ["X", ".", ".", "."],
+  [".", "M", ".", "."],
+  [".", ".", "A", "."],
+  [".", ".", ".", "S"],
+];
+
+const XMAS_PATTERN6 = [
+  ["S", ".", ".", "."],
+  [".", "A", ".", "."],
+  [".", ".", "M", "."],
+  [".", ".", ".", "X"],
+];
+
+const XMAS_PATTERN7 = [
+  [".", ".", ".", "S"],
+  [".", ".", "A", "."],
+  [".", "M", ".", "."],
+  ["X", ".", ".", "."],
+];
+
+const XMAS_PATTERN8 = [
+  [".", ".", ".", "X"],
+  [".", ".", "M", "."],
+  [".", "A", ".", "."],
+  ["S", ".", ".", "."],
+];
+
 async function main() {
   const grid = await readFileLineByLine("./input.txt");
 
-  console.log(grid);
+  const r1 = findSubMatrix(grid, [["X", "M", "A", "S"]]).length;
+  const r2 = findSubMatrix(grid, [["S", "A", "M", "X"]]).length;
+  const r3 = findSubMatrix(grid, [["X"], ["M"], ["A"], ["S"]]).length;
+  const r4 = findSubMatrix(grid, [["S"], ["A"], ["M"], ["X"]]).length;
+  const r5 = findSubMatrix(grid, XMAS_PATTERN5).length;
+  const r6 = findSubMatrix(grid, XMAS_PATTERN6).length;
+  const r7 = findSubMatrix(grid, XMAS_PATTERN7).length;
+  const r8 = findSubMatrix(grid, XMAS_PATTERN8).length;
+
+  console.log("part1", r1 + r2 + r3 + r4 + r5 + r6 + r7 + r8);
 
   const result1 = findSubMatrix(grid, PATTERN1);
   const result2 = findSubMatrix(grid, PATTERN2);
   const result3 = findSubMatrix(grid, PATTERN3);
   const result4 = findSubMatrix(grid, PATTERN4);
 
-  console.log(result1);
-  console.log(result2);
-  console.log(result3);
-  console.log(result4);
-
-  console.log("#1#", result1.length);
-  console.log("#2#", result2.length);
-  console.log("#3#", result3.length);
-  console.log("#4#", result4.length);
-
   console.log(
-    "total",
+    "part2",
     result1.length + result2.length + result3.length + result4.length
   );
 }
