@@ -67,7 +67,7 @@ function part2(input) {
       if (c0) {
         c0 = c1;
       } else {
-        c0 = n1;
+        c0 = n1; // n1 is the first c0
       }
     }
   }
