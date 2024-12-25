@@ -1,4 +1,4 @@
-import { read } from "../lib.mjs";
+import { read, sum } from "../lib.mjs";
 
 let map;
 let start;
@@ -8,10 +8,7 @@ let cols;
 
 const OFFSET = 8;
 const getNodeId = (dir, x, y) => (((x << OFFSET) + y) << 2) + dir;
-// const getNodeId = (dir, x, y) => {
-//   const d = [">", "v", "<", "^"][dir];
-//   return `${d}${x},${y}`;
-// };
+
 const nodeIdToXY = (nodeId) => {
   const xy = nodeId >>> 2;
   const y = xy % 2 ** OFFSET;
@@ -80,8 +77,6 @@ function mazeToDirectedGraph(maze) {
   function walk(x, y, currentDir) {
     const nodeId = getNodeId(currentDir, x, y);
 
-    // if (visited.has(nodeId)) return;
-
     visited[nodeId] ??= 0;
     visited[nodeId] += 1;
 
@@ -132,46 +127,12 @@ function mazeToDirectedGraph(maze) {
   return { graph, branchingPoints };
 }
 
-function compressGraph(graph, branchingPoints) {
-  const compressedGraph = {};
-
-  for (const startNode of Object.keys(graph)) {
-    // Only process branching points
-    if (branchingPoints[startNode]) {
-      compressedGraph[startNode] = {};
-      for (const [neighbor, weight] of Object.entries(graph[startNode])) {
-        let totalWeight = weight;
-        let currentNode = neighbor;
-
-        // Follow the linear path until another branching point or end of graph
-        while (!branchingPoints[currentNode] && graph[currentNode]) {
-          const nextNodes = Object.entries(graph[currentNode]);
-          if (nextNodes.length !== 1) break; // Stop if not a linear path
-          const [nextNode, nextWeight] = nextNodes[0];
-          totalWeight += nextWeight;
-          currentNode = nextNode;
-        }
-
-        // Add the compressed edge to the graph
-        compressedGraph[startNode][currentNode] = totalWeight;
-      }
-    }
-  }
-
-  // Ensure the start and end nodes are in the compressed graph
-  // if (!compressedGraph[start]) compressedGraph[start] = {};
-  // if (!compressedGraph[end]) compressedGraph[end] = {};
-
-  return compressedGraph;
-}
-
 function dijkstra(graph, start) {
   const distances = {};
   const visited = {};
   const previous = {};
   const nodes = Object.keys(graph);
 
-  // Initially, set the shortest distance to every node as Infinity
   for (let node of nodes) {
     distances[node] = Infinity;
   }
@@ -193,7 +154,6 @@ function dijkstra(graph, start) {
       if (!visited[neighbor]) {
         let newDistance = distances[node] + graph[node][neighbor];
 
-        // If the newly calculated distance is shorter than the previously known distance to this neighbor
         if (newDistance < distances[neighbor]) {
           distances[neighbor] = newDistance;
 
@@ -209,30 +169,16 @@ function dijkstra(graph, start) {
   return { distances, previous };
 }
 
-function part2(map) {
-  const t0 = performance.now();
-
-  const { graph, branchingPoints } = mazeToDirectedGraph(map);
-  const t1 = performance.now();
-
-  console.log("map to graph", t1 - t0);
+function part1(map) {
+  let { graph } = mazeToDirectedGraph(map);
 
   const startNode = getNodeId(0, start[0], start[1]);
-  const endNode = getNodeId(3, end[0], end[1]);
+  const endNode = getNodeId(3, end[0], end[1]); // pick end node facing, 3 = up
 
-  const compressed = compressGraph(graph, branchingPoints);
-  const t2 = performance.now();
-
-  console.log("graph compression", t2 - t1);
-
-  const { distances, previous } = dijkstra(compressed, startNode);
-
-  const t3 = performance.now();
-
-  console.log("dijkstra", t3 - t2);
+  const { previous } = dijkstra(graph, startNode);
 
   const visited = { [end]: true, [start]: true };
-  let total = 0;
+
   const key = (x, y) => x + "," + y;
 
   function countPrevious(node) {
@@ -244,32 +190,20 @@ function part2(map) {
       const [node] = nodes;
       const [x, y] = nodeIdToXY(node);
       visited[key(x, y)] = true;
+
       countPrevious(node);
-      map[x][y] = "x";
     } else {
       nodes.forEach(countPrevious);
-      const [x, y] = nodeIdToXY(node);
-      visited[key(x, y)] = true;
+      nodes.forEach((node) => {
+        const [x, y] = nodeIdToXY(node);
+        visited[key(x, y)] = true;
+      });
     }
   }
 
   countPrevious(endNode);
 
-  console.log(Object.keys(visited).length + total);
-
-  console.table(map);
-
-  const prices = [
-    distances[getNodeId(0, end[0], end[1])],
-    distances[getNodeId(1, end[0], end[1])],
-    distances[getNodeId(2, end[0], end[1])],
-    distances[getNodeId(3, end[0], end[1])],
-  ]; // .sort((a, b) => a - b);
-
-  console.log(prices);
-
-  const t4 = performance.now();
-  console.log("part 2", t4 - t3);
+  console.log(Object.values(visited).reduce(sum));
 }
 
 /// main ///
@@ -277,4 +211,4 @@ map = read()
   .split("\n")
   .map((line) => line.split(""));
 
-part2(map);
+part1(map);

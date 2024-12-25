@@ -1,4 +1,4 @@
-import { read } from "../lib.mjs";
+import { read, sum } from "../lib.mjs";
 
 let map;
 let start;
@@ -6,46 +6,30 @@ let end;
 let rows;
 let cols;
 
-let char = 64;
-function unique() {
-  char++;
-  return String.fromCharCode(char);
-}
+const OFFSET = 8;
+const getNodeId = (dir, x, y) => (((x << OFFSET) + y) << 2) + dir;
 
-function printMap() {
-  map.forEach((line) => console.log(line.join("")));
-}
+const nodeIdToXY = (nodeId) => {
+  const xy = nodeId >>> 2;
+  const y = xy % 2 ** OFFSET;
+  const x = xy >> OFFSET;
 
-const OFFSET = 4;
-// const getNodeId = (x, y) => (x << OFFSET) + y - (2 << (OFFSET - 1)) - 1;
-const getNodeId = (dir, x, y) => {
-  const d = [">", "v", "<", "^"][dir];
-
-  return `${d}${x},${y}`;
+  return [x, y];
 };
-const nodeIdToXY = (nodeId) => JSON.parse(`[${nodeId}]`);
 
-function plotPoints(points) {
-  const grid = Array.from({ length: rows }, () => Array(cols).fill(" "));
+const [x, y] = nodeIdToXY(getNodeId(0, 2, 3));
 
-  points.forEach(([x, y]) => {
-    grid[x][y] = "X";
-  });
+console.assert(x == 2 && y === 3, "Node Id is wrong", x, y);
 
-  console.table(grid);
-}
-
-function plotPointsToMap(points) {
-  points.forEach(([x, y]) => {
-    map[x][y] = "X";
-  });
-
-  console.table(map);
-}
-
-function mazeToDirectedGraph(maze) {
+function findSE(maze) {
   rows = maze.length;
   cols = maze[0].length;
+
+  if (maze[rows - 2][1] === "S" && maze[1][cols - 2] === "E") {
+    start = [rows - 2, 1];
+    end = [1, cols - 2];
+    return;
+  }
 
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
@@ -61,9 +45,25 @@ function mazeToDirectedGraph(maze) {
   if (!start) {
     throw new Error("No starting point 'S' found in the maze");
   }
+}
 
-  // Adjacency list to represent the directed graph
+function mazeToDirectedGraph(maze) {
+  findSE(maze);
+
+  const startNode = getNodeId(0, start[0], start[1]);
+  const endNode0 = getNodeId(0, end[0], end[1]);
+  const endNode1 = getNodeId(1, end[0], end[1]);
+  const endNode2 = getNodeId(2, end[0], end[1]);
+  const endNode3 = getNodeId(3, end[0], end[1]);
+
   const graph = {};
+  const branchingPoints = {
+    [startNode]: true,
+    [endNode0]: true,
+    [endNode1]: true,
+    [endNode2]: true,
+    [endNode3]: true,
+  };
 
   const DIRECTIONS = [
     [0, 1], // Right  >
@@ -77,195 +77,144 @@ function mazeToDirectedGraph(maze) {
   function walk(x, y, currentDir) {
     const nodeId = getNodeId(currentDir, x, y);
 
-    if (visited[nodeId]) return;
-
     visited[nodeId] ??= 0;
     visited[nodeId] += 1;
 
-    // Initialize the adjacency list for this node
+    graph[nodeId] ??= {}; // adjacency
 
-    graph[nodeId] ??= {};
+    let validDirections = [];
 
-    for (let di = 0; di < 4; di++) {
-      const [dx, dy] = DIRECTIONS[di];
+    for (let dir = 0; dir < 4; dir++) {
+      const [dx, dy] = DIRECTIONS[dir];
 
-      if (Math.abs(di - currentDir) === 2) continue;
+      if (Math.abs(dir - currentDir) === 2) continue;
 
       const nx = x + dx;
       const ny = y + dy;
 
-      // Ensure the neighbor is within bounds and walkable
       if (
-        nx >= 0 &&
-        nx < rows &&
-        ny >= 0 &&
-        ny < cols &&
         maze[nx][ny] !== "#" // Check walkable (not a wall)
       ) {
-        const neighborId = getNodeId(di, nx, ny);
-
-        // console.log("di", di, "currentDir", currentDir);
-        const weight = di === currentDir ? 1 : 1001;
-
-        graph[nodeId][neighborId] = weight;
-
-        // if (weight === 1001) {
-        //   graph[nodeId].push({ node: neighborId, weight });
-        // } else {
-        //   graph[nodeId].unshift({ node: neighborId, weight });
-        // }
-
-        if (visited[nodeId] < 3) {
-          walk(nx, ny, di);
-        }
+        validDirections.push(dir);
       }
     }
+
+    if (validDirections.length > 1) {
+      branchingPoints[nodeId] = true;
+    }
+
+    validDirections.forEach((dir) => {
+      const [dx, dy] = DIRECTIONS[dir];
+
+      const nx = x + dx;
+      const ny = y + dy;
+
+      const neighborId = getNodeId(dir, nx, ny);
+
+      const weight = dir === currentDir ? 1 : 1001;
+
+      graph[nodeId][neighborId] = weight;
+
+      if (visited[nodeId] < 4) {
+        walk(nx, ny, dir);
+      }
+    });
   }
 
   // start right
   walk(start[0], start[1], 0);
 
-  return graph;
+  return { graph, branchingPoints };
 }
 
-function removeDeadEnds(graph, startNode, endNode) {
-  // Function to identify reachable nodes from the start using BFS or DFS
-  function getReachableNodes(graph, startNode) {
-    const reachable = new Set();
-    const stack = [startNode];
+function compressGraph(graph, branchingPoints) {
+  const compressedGraph = {};
 
-    while (stack.length > 0) {
-      const node = stack.pop();
-      if (!reachable.has(node)) {
-        reachable.add(node);
-        for (const edge of graph[node] || []) {
-          stack.push(edge.node);
+  for (const startNode of Object.keys(graph)) {
+    // Only process branching points
+    if (branchingPoints[startNode]) {
+      compressedGraph[startNode] = {};
+      for (const [neighbor, weight] of Object.entries(graph[startNode])) {
+        let totalWeight = weight;
+        let currentNode = neighbor;
+
+        // Follow the linear path until another branching point or end of graph
+        while (!branchingPoints[currentNode] && graph[currentNode]) {
+          const nextNodes = Object.entries(graph[currentNode]);
+          if (nextNodes.length !== 1) break; // Stop if not a linear path
+          const [nextNode, nextWeight] = nextNodes[0];
+          totalWeight += nextWeight;
+          currentNode = nextNode;
         }
+
+        // Add the compressed edge to the graph
+        compressedGraph[startNode][currentNode] = totalWeight;
       }
     }
-    return reachable;
   }
 
-  // Step 1: Find all reachable nodes from the start node
-  const reachableFromStart = getReachableNodes(graph, startNode);
-
-  // Step 2: Find all reachable nodes from the end node (to handle bi-directional paths)
-  const reversedGraph = reverseGraph(graph);
-  const reachableFromEnd = getReachableNodes(reversedGraph, endNode);
-
-  // Step 3: Filter the graph to keep only nodes that are both reachable from start and end
-  const validNodes = new Set(
-    [...reachableFromStart].filter((node) => reachableFromEnd.has(node))
-  );
-
-  // Step 4: Remove dead ends (nodes that are not part of valid paths or are dead ends)
-  const prunedGraph = {};
-  for (const node in graph) {
-    if (validNodes.has(node)) {
-      prunedGraph[node] = graph[node].filter((edge) =>
-        validNodes.has(edge.node)
-      );
-    }
-  }
-
-  return prunedGraph;
-}
-
-// Helper function to reverse the graph (for reverse traversal)
-function reverseGraph(graph) {
-  const reversed = {};
-  for (const node in graph) {
-    for (const edge of graph[node]) {
-      if (!reversed[edge.node]) {
-        reversed[edge.node] = [];
-      }
-      reversed[edge.node].push({ node: node, weight: edge.weight });
-    }
-  }
-  return reversed;
+  return compressedGraph;
 }
 
 function dijkstra(graph, start) {
-  // Create an object to store the shortest distance from the start node to every other node
-  let distances = {};
+  const distances = {};
+  const visited = {};
+  const previous = {};
+  const nodes = Object.keys(graph);
 
-  // A set to keep track of all visited nodes
-  let visited = {};
-
-  // Get all the nodes of the graph
-  let nodes = Object.keys(graph);
-
-  // Initially, set the shortest distance to every node as Infinity
   for (let node of nodes) {
     distances[node] = Infinity;
   }
 
-  // The distance from the start node to itself is 0
   distances[start] = 0;
 
-  // Loop until all nodes are visited
+  const compare = (a, b) => distances[a] - distances[b];
+
   while (nodes.length) {
     // Sort nodes by distance and pick the closest unvisited node
-    nodes.sort((a, b) => distances[a] - distances[b]);
-    let closestNode = nodes.shift();
+    nodes.sort(compare);
+    let node = nodes.shift();
 
-    // If the shortest distance to the closest node is still Infinity, then remaining nodes are unreachable and we can break
-    if (distances[closestNode] === Infinity) break;
+    if (distances[node] === Infinity) break;
 
-    // Mark the chosen node as visited
-    visited[closestNode] = true;
+    visited[node] = true;
 
-    // For each neighboring node of the current node
-    for (let neighbor in graph[closestNode]) {
-      // If the neighbor hasn't been visited yet
+    for (let neighbor in graph[node]) {
       if (!visited[neighbor]) {
-        // Calculate tentative distance to the neighboring node
+        let newDistance = distances[node] + graph[node][neighbor];
 
-        let newDistance = distances[closestNode] + graph[closestNode][neighbor];
-
-        // If the newly calculated distance is shorter than the previously known distance to this neighbor
         if (newDistance < distances[neighbor]) {
-          // Update the shortest distance to this neighbor
           distances[neighbor] = newDistance;
+
+          previous[neighbor] = [node];
+        } else if (newDistance === distances[neighbor]) {
+          previous[neighbor].push(node);
         }
       }
     }
   }
 
   // Return the shortest distance from the start node to all nodes
-  return distances;
+  return { distances, previous };
 }
 
 function part1(map) {
-  const graph = mazeToDirectedGraph(map);
-  console.log("start", start);
-  console.log("end", end);
+  let { graph, branchingPoints } = mazeToDirectedGraph(map);
 
   const startNode = getNodeId(0, start[0], start[1]);
-  const endNode = getNodeId(3, end[0], end[1]);
 
-  console.table(map);
-  //   const pruned = removeDeadEnds(graph, startNode, endNode);
+  graph = compressGraph(graph, branchingPoints);
 
-  const distances = dijkstra(graph, startNode);
+  const { distances } = dijkstra(graph, startNode);
 
   const prices = [
     distances[getNodeId(0, end[0], end[1])],
     distances[getNodeId(1, end[0], end[1])],
     distances[getNodeId(2, end[0], end[1])],
     distances[getNodeId(3, end[0], end[1])],
-  ];
+  ].sort((a, b) => a - b);
 
-  console.log(prices);
-
-  // const result = findPath(graph, startNodeId, endNodeId);
-
-  //   plotPoints(Object.keys(pruned).map(nodeIdToXY));
-  //   const result = dijkstra(pruned, startNode, endNode);
-  //   plotPointsToMap(result.map(nodeIdToXY));
-  //   console.log(result);
-
-  //   console.log("Total Cost:", result.cost);
+  console.log(prices[0]);
 }
 
 /// main ///
