@@ -1,6 +1,7 @@
 import { readFileSync } from "fs";
 import { parse, lusolve } from "mathjs";
 import "../lib.mjs";
+import "./reshape.mjs";
 
 function read(filePath) {
   return readFileSync(filePath, { encoding: "utf-8", flag: "r" });

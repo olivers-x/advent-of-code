@@ -1,10 +1,6 @@
 import * as Mathjs from "mathjs";
 import { read, sum } from "../lib.mjs";
 
-function isWhole(a) {
-  return a == Math.round(a);
-}
-
 const regex = /\d+/g;
 
 const math = Mathjs.create(Mathjs.all, { number: "number" });
@@ -53,8 +49,5 @@ async function part2(input) {
 }
 
 const r = await part2(read());
-console.assert(r === 87550094242995n, { r });
-console.log(r);
 
-// 2312633642825590265 // too high
-// 87550094242995 // correct
+console.log(r);

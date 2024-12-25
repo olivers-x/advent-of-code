@@ -37,8 +37,6 @@ async function part2(input) {
   const map = input.split("\n").map((line) => line.split(""));
   const size = map.length;
 
-  console.table(map);
-
   const flattened = map.flat();
 
   const total = flattened
