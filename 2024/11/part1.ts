@@ -30,9 +30,7 @@ function blink(stones: number[]) {
 
 function part1(input: string) {
   const stones = input.split(" ").map(toInt);
-  const nBlinks = 75;
-
-  console.table(stones);
+  const nBlinks = 25;
 
   let state = stones;
   for (let i = 0; i < nBlinks; i++) {
