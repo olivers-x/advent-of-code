@@ -10,8 +10,6 @@ let cols;
 const key = (row, col) => `${row},${col}`;
 const getRowCol = (key) => key.split(",").map(Number);
 
-const desc = (a, b) => b - a;
-
 function findSE(maze) {
   rows = maze.length;
   cols = maze[0].length;
@@ -51,7 +49,6 @@ function dijkstra(maze, start, end, pathSymbol, maxDistance = Infinity) {
   const [endRow, endCol] = end;
   const endSymbol = maze[endRow][endCol];
 
-  // Initialize starting point
   distances[startRow][startCol] = 0;
   pq.enqueue([startRow, startCol], 0);
 
@@ -60,12 +57,8 @@ function dijkstra(maze, start, end, pathSymbol, maxDistance = Infinity) {
 
     const k = key(currentRow, currentRow);
 
-    // Stop if we've reached the end
     if (currentRow === endRow && currentCol === endCol) break;
 
-    // if (distances[currentRow][currentCol] > maxDistance) break;
-
-    // Explore neighbors
     for (const [dr, dc] of directions) {
       const newRow = currentRow + dr;
       const newCol = currentCol + dc;
@@ -75,14 +68,12 @@ function dijkstra(maze, start, end, pathSymbol, maxDistance = Infinity) {
           maze[newRow][newCol] === pathSymbol ||
           maze[newRow][newCol] === endSymbol
         ) {
-          // Check if the neighbor is within bounds and walkable
           const newDist = distances[currentRow][currentCol] + 1; // All moves cost 1
 
-          // If a shorter path is found
           if (newDist < distances[newRow][newCol] && newDist <= maxDistance) {
             distances[newRow][newCol] = newDist;
 
-            pq.enqueue([newRow, newCol], newDist); // Add neighbor to the priority queue
+            pq.enqueue([newRow, newCol], newDist);
           }
         }
       }
@@ -106,8 +97,8 @@ function getPath(distances) {
   return path;
 }
 
-const SAVE_LIMIT = 100;
-const SHORTCUT_DISTANCE = 20;
+let SAVE_LIMIT = 100;
+let SHORTCUT_DISTANCE = 20;
 
 function part2(input) {
   map = input.split("\n").map((row) => row.split(""));
@@ -116,7 +107,6 @@ function part2(input) {
 
   const { distances } = dijkstra(map, start, end, ".", Infinity);
 
-  console.table(distances);
   const path = getPath(distances);
 
   function getPossibleShortcutEnds(point) {
@@ -146,7 +136,6 @@ function part2(input) {
     const [x, y] = getRowCol(point);
 
     if (ends.length) {
-      console.log("point:", point);
       const distances = ends.map((end) => {
         const [px, py] = getRowCol(end);
         const dxdy = Math.abs(px - x) + Math.abs(py - y);
@@ -164,7 +153,8 @@ function part2(input) {
     }
   }
 
-  console.log(saves.map((s) => s.n).reduce((acc, n) => acc + n, 0));
+  const result = saves.map((s) => s.n).reduce((acc, n) => acc + n, 0);
+  return result;
 }
 
-part2(read());
+console.log(part2(read()));

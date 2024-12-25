@@ -66,24 +66,23 @@ function dijkstra(maze, start, end) {
       const newRow = currentRow + dr;
       const newCol = currentCol + dc;
 
-      if (maze[newRow][newCol] === "#")
-        if (
-          newRow >= 0 &&
-          newRow < rows &&
-          newCol >= 0 &&
-          newCol < cols &&
-          maze[newRow][newCol] !== "#"
-        ) {
-          // Check if the neighbor is within bounds and walkable
-          const newDist = distances[currentRow][currentCol] + 1; // All moves cost 1
+      if (
+        newRow >= 0 &&
+        newRow < rows &&
+        newCol >= 0 &&
+        newCol < cols &&
+        maze[newRow][newCol] !== "#"
+      ) {
+        // Check if the neighbor is within bounds and walkable
+        const newDist = distances[currentRow][currentCol] + 1; // All moves cost 1
 
-          // If a shorter path is found
-          if (newDist < distances[newRow][newCol]) {
-            distances[newRow][newCol] = newDist;
-            previous[newRow][newCol] = [currentRow, currentCol]; // Track the path
-            pq.enqueue([newRow, newCol], newDist); // Add neighbor to the priority queue
-          }
+        // If a shorter path is found
+        if (newDist < distances[newRow][newCol]) {
+          distances[newRow][newCol] = newDist;
+          previous[newRow][newCol] = [currentRow, currentCol]; // Track the path
+          pq.enqueue([newRow, newCol], newDist); // Add neighbor to the priority queue
         }
+      }
     }
   }
 
@@ -111,11 +110,7 @@ function part1(input) {
 
   findSE(map);
 
-  console.table(map);
-
   const { distance: maxDistance } = dijkstra(map, start, end);
-
-  console.log("maxDistance:", maxDistance);
 
   const saves = walls
     .map((wall) => {
@@ -126,8 +121,6 @@ function part1(input) {
     })
     .filter(Boolean)
     .sort((a, b) => b - a);
-
-  saves.forEach((save) => console.log("save:", save));
 
   console.log(saves.filter((save) => save >= 100).length);
 }
