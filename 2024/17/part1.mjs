@@ -80,7 +80,6 @@ function part1(input) {
   }
 
   console.log();
-  console.log("A:", A, "B:", B, "C:", C);
 }
 
 part1(read());
