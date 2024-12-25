@@ -36,7 +36,6 @@ function findPassing(entries, order) {
   const passing = {};
 
   function fuckingElf(mainArray, subArray) {
-    // Helper function to check if a given array contains the subArray in the same order
     function isSubArrayInOrder(array, subArray) {
       let first = -1;
       let second = -1;
@@ -150,11 +149,8 @@ async function main() {
   const passing = findPassing(parsedManual, parsedOrder);
 
   const passingSum = count(passing);
-  // const breakingSum = count(breaking);
 
   switchEntries(breaking, parsedOrder);
-
-  const passing2 = findPassing(parsedManual, parsedOrder);
 
   let isOrdered = false;
 
@@ -172,7 +168,8 @@ async function main() {
     })
     .reduce(sum, 0);
 
-  console.log("result", result);
+  console.log("part1", passingSum);
+  console.log("part2", result);
 }
 
 main();
