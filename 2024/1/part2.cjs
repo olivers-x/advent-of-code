@@ -29,22 +29,36 @@ async function readFileLineByLine(filePath) {
   return { list1, list2 };
 }
 
+function createHistogram(array) {
+  const histogram = {};
+
+  for (const num of array) {
+    if (histogram[num]) {
+      histogram[num]++;
+    } else {
+      histogram[num] = 1;
+    }
+  }
+
+  return histogram;
+}
+
 async function main() {
   const { list1, list2 } = await readFileLineByLine("./input.txt");
-  list1.sort();
-  list2.sort();
-  console.log(list1);
-  console.log(list2);
 
-  const distance = list1.map((first, i) => Math.abs(first - list2[i]));
+  const list2histogram = createHistogram(list2);
 
-  console.log("distance", distance);
+  const distance = (first) => {
+    const frequency = list2histogram[first] ?? 0;
+    return frequency * first;
+  };
 
   const sum = (a, b) => a + b;
 
-  const total = distance.reduce(sum, 0);
+  const list1distance = list1.map(distance);
+  const total = list1distance.reduce(sum, 0);
 
-  console.log("total", total);
+  console.log(total);
 }
 
 main();

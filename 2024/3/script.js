@@ -42,6 +42,18 @@ function removeBetween(input) {
   return input.replace(regex, "");
 }
 
+function countMul(input) {
+  const regex = /mul\(\d+,\d+\)/g;
+  const parsed = [...input.matchAll(regex)];
+
+  return parsed
+    .map((mul) => {
+      const [first, second] = extractNumbers(mul[0]);
+      return first * second;
+    })
+    .reduce(sum, 0);
+}
+
 const inputString =
   "This is a do() sample don't() string  do() with don't()[extra content]do() to remove.";
 const result = removeBetween(inputString);
@@ -50,27 +62,11 @@ console.log(result);
 async function main() {
   const lines = await readFileLineByLine("input.txt");
 
-  const regex = /mul\(\d+,\d+\)/g;
-
   const together = lines.reduce(sum, "");
-
   const filtered = removeBetween(together);
 
-  const parsed = [...filtered.matchAll(regex)];
-
-  let total = 0;
-
-  const result = parsed
-    .map((mul) => {
-      const [first, second] = extractNumbers(mul[0]);
-      return first * second;
-    })
-    .reduce(sum, 0);
-  console.log("line result", result);
-
-  total += result;
-
-  console.log("total", total);
+  console.log("part1", countMul(together));
+  console.log("part2", countMul(filtered));
 }
 
 main();

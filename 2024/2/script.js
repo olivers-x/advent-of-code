@@ -59,10 +59,15 @@ async function main() {
     return true;
   }
 
+  let safeCount = 0;
+
   const result = list.map((line) => {
     const isSafe = checkLine(line);
 
-    if (isSafe) return true;
+    if (isSafe) {
+      safeCount++;
+      return true;
+    }
 
     // remove item by item and check again
     for (let i = 0; i < line.length; i++) {
@@ -74,11 +79,11 @@ async function main() {
       }
     }
 
-    console.log(line);
     return false;
   });
 
-  console.log("count", result.filter(Boolean).length);
+  console.log("part 1", safeCount);
+  console.log("part 2", result.filter(Boolean).length);
 }
 
 main();
