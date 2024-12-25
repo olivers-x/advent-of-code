@@ -30,15 +30,12 @@ function dijkstra(maze, start, end) {
   while (!pq.isEmpty()) {
     const [currentRow, currentCol] = pq.dequeue();
 
-    // Stop if we've reached the end
     if (currentRow === endRow && currentCol === endCol) break;
 
-    // Explore neighbors
     for (const [dr, dc] of directions) {
       const newRow = currentRow + dr;
       const newCol = currentCol + dc;
 
-      // Check if the neighbor is within bounds and walkable
       if (
         newRow >= 0 &&
         newRow < rows &&
@@ -48,7 +45,6 @@ function dijkstra(maze, start, end) {
       ) {
         const newDist = distances[currentRow][currentCol] + 1; // All moves cost 1
 
-        // If a shorter path is found
         if (newDist < distances[newRow][newCol]) {
           distances[newRow][newCol] = newDist;
           previous[newRow][newCol] = [currentRow, currentCol];
