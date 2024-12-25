@@ -1,0 +1,1 @@
+`bun run script.cjs input.txt`

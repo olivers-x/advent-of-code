@@ -158,7 +158,8 @@ async function main() {
     [prevX, prevY] = possibleObstacles[i];
   });
 
-  console.log(stuckCount);
+  console.log("part1", possibleObstacles.length + 1);
+  console.log("part2", stuckCount);
 }
 
 main();
