@@ -1,0 +1,14 @@
+{
+  "name": "04",
+  "version": "1.0.0",
+  "description": "",
+  "main": "part1-c.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ml-matrix-convolution": "^2.0.0"
+  }
+}
