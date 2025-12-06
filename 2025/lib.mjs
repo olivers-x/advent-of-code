@@ -6,6 +6,8 @@ export const sum = (a, b) => a + b;
 
 export const toInt = (s) => parseInt(s, 10);
 
+export const isNumber = (n) => n !== undefined && n !== ' ' && !Number.isNaN(n);
+
 export function unique(value, index, array) {
   return array.indexOf(value) === index;
 }
