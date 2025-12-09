@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Shape Visualization</title>
+    <style>
+      body {
+        margin: 0;
+        background: #1a1a1a;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: white;
+        font-family: sans-serif;
+        overflow: hidden;
+      }
+      canvas {
+        border: 1px solid #444;
+        background: #000;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+      }
+      .error {
+        color: #ff5555;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="myCanvas"></canvas>
+
+    <script>
+      async function loadAndDraw() {
+        const statusEl = document.getElementById('status');
+        let textData = '';
+
+        try {
+          // Fetch the file from the same directory
+          const response = await fetch('http://localhost:8000/input.txt');
+
+          if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status}`);
+          }
+
+          textData = await response.text();
+        } catch (err) {
+          return;
+        }
+
+        // 1. Parse Input
+        const points = textData
+          .trim()
+          .split('\n')
+          .map((line) => {
+            const parts = line.split(',');
+            // Basic validation to ensure line has data
+            if (parts.length < 2) return null;
+            return { x: Number(parts[0]), y: Number(parts[1]) };
+          })
+          .filter((p) => p !== null);
+
+        if (points.length === 0) {
+          statusEl.innerText = 'File is empty or invalid format.';
+          return;
+        }
+
+        // 2. Find Bounds
+        let minX = Infinity,
+          minY = Infinity;
+        let maxX = -Infinity,
+          maxY = -Infinity;
+
+        points.forEach((p) => {
+          if (p.x < minX) minX = p.x;
+          if (p.x > maxX) maxX = p.x;
+          if (p.y < minY) minY = p.y;
+          if (p.y > maxY) maxY = p.y;
+        });
+
+        // 3. Setup Canvas
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Function to handle resizing and redrawing
+        function render() {
+          const padding = 60;
+          canvas.width = window.innerWidth - padding;
+          canvas.height = window.innerHeight - padding;
+
+          const shapeWidth = maxX - minX;
+          const shapeHeight = maxY - minY;
+
+          // Calculate Scale
+          const scaleX = (canvas.width - padding) / shapeWidth;
+          const scaleY = (canvas.height - padding) / shapeHeight;
+          const scale = Math.min(scaleX, scaleY);
+
+          // Helper to map coordinate to screen
+          const toScreen = (x, y) => ({
+            x: (x - minX) * scale + padding / 2,
+            y: (y - minY) * scale + padding / 2,
+          });
+
+          // Clear
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // --- Pass 1: Draw Lines (Cyan) ---
+          ctx.beginPath();
+          const start = toScreen(points[0].x, points[0].y);
+          ctx.moveTo(start.x, start.y);
+
+          for (let i = 1; i < points.length; i++) {
+            const p = toScreen(points[i].x, points[i].y);
+            ctx.lineTo(p.x, p.y);
+          }
+          ctx.closePath();
+
+          ctx.strokeStyle = '#00ffff';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
+          ctx.fill();
+
+          // --- Pass 2: Draw Red Dots (Vertices) ---
+          ctx.fillStyle = '#ff0000';
+
+          points.forEach((point) => {
+            const p = toScreen(point.x, point.y);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+          });
+
+          const p1 = toScreen(5_254, 66_490);
+          const p2 = toScreen(94_821, 50_072);
+          ctx.beginPath();
+          ctx.rect(p1.x, p1.y, p2.x - p1.x, -(p1.y - p2.y));
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(45, 96, 96, 0.9)';
+          ctx.fill();
+        }
+
+        // Initial render
+        render();
+
+        // Redraw on window resize
+        window.addEventListener('resize', render);
+      }
+
+      // Start the process
+      loadAndDraw();
+    </script>
+  </body>
+</html>
