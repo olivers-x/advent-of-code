@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "javascript-lp-solver": "^0.4.24",
+    "z3-solver": "^4.15.4"
+  }
+}
