@@ -40,3 +40,19 @@ export function padWithZero(grid) {
 
   return padded;
 }
+
+const makeKey = (a, b) => `${a}-${b}`;
+
+export const memoize = (fn) => {
+  let cache = {};
+  return (...args) => {
+    let key = makeKey(args[0], args[1]);
+    if (key in cache) {
+      return cache[key];
+    } else {
+      let result = fn(args[0], args[1]);
+      cache[key] = result;
+      return result;
+    }
+  };
+};
